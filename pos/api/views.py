@@ -1,10 +1,53 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from pos_app.models import TableResto
-from api.serializers import (RegisterUserSerializers, TableRestoSerializers)
+from pos_app.models import ( TableResto, MenuResto, StatusModel)
+from api.serializers import (RegisterUserSerializers, TableRestoSerializers, LoginSerializers, MenuRestoSerializer)
 from rest_framework import generics
+from rest_framework.authtoken.models import Token
+from django.contrib.auth import login as django_login, logout as django_logout
+from django.http import HttpResponse, JsonResponse
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
+class LoginView(APIView):
+    serializer_class = LoginSerializers
+
+    def post(self, request):
+        serializer = LoginSerializers(data = request.data)
+        serializer.is_valid(raise_exception = True)
+        user = serializer.validated_data['user']
+        django_login(request, user)
+        token, created = Token.objects.get_or_create(user = user)
+        return JsonResponse({
+            'status' : 200,
+            'message' : 'Selamat anda berhasil masuk....',
+            'data' : {
+                'token' : token.key,
+                'id' : user.id,
+                'first_name' : user.first_name,
+                'last_name' : user.last_name,
+                'email' : user.email,
+                'is_active' : user.is_active,
+            }
+        })        
+
+class MenuRestoView(APIView):
+    authentication_class = [SessionAuthentication, BasicAuthentication]
+
+    def get(self, request, *args, **kwargs):
+        menu_restos = MenuResto.objects.select_related('status').\
+            filter(status = StatusModel.objects.first())
+        serializer = MenuRestoSerializer(menu_restos, many = True, )
+        response = {
+            'status' : status.HTTP_200_OK,
+            'message' : 'Pembacaan seluruh data berhasil...',
+            'user' : str(request.user),
+            'auth' : str(request.auth),
+            'data' : serializer.data,
+        }
+        return Response(response, status = status.HTTP_200_OK)
+    
 
 class RegisterUserApiView(APIView):
     serializer_class = RegisterUserSerializers

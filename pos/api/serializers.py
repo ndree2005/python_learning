@@ -17,7 +17,7 @@ class RegisterUserSerializers(serializers.ModelSerializer):
     class Meta:
         model = User
         fields  = [ 'username', 'email', 'password1', 'password2',
-                    'is_active', 'is_waitress', 'first_name', 'last_name']
+                    'is_active', 'first_name', 'last_name']
         extra_kwargs = {
             'first_name' : {'required' : True},
             'last_name'  : {'required' : True}
@@ -35,7 +35,6 @@ class RegisterUserSerializers(serializers.ModelSerializer):
             username = validate_data['username'],
             email = validate_data['email'],
             is_active = validate_data['is_active'],
-            is_waitress = validate_data['is_waitress'],
             first_name = validate_data['first_name'],
             last_name = validate_data['last_name']
         )
@@ -43,7 +42,39 @@ class RegisterUserSerializers(serializers.ModelSerializer):
         user.save()
         return user
 
+class LoginSerializers(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField()
+
+    def validate(self, data):
+        username = data.get('username', '')
+        password = data.get('password', '')
+
+        if username and password:
+            user = authenticate(username = username, password = password)
+            if user:
+                if user.is_active:
+                    data['user'] = user
+                else:
+                    msg = 'status pengguna tidaak aktif..'
+                    raise ValidationError({'message' : msg})
+            else:
+                msg = 'anda tidak dapat login dengan username dan password yang benar..'
+                raise ValidationError({'message' : msg})
+        else:
+            msg = 'mohon isi username dan password untuk login..'
+            raise ValidationError({'message' : msg})
+        return data
+        
+
 class TableRestoSerializers(serializers.ModelSerializer):
     class Meta:
         model = TableResto
         fields = ('id', 'code', 'name', 'capacity', 'table_status', 'status',)
+
+
+class MenuRestoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MenuResto
+        fields = ('id', 'code', 'name', 'price', 'description', 'image_menu', 'category', 'menu_status', 'status', 'user_create', 'user_update', 'created_on', 'last_modified')
+
