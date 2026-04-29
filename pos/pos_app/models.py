@@ -1,10 +1,5 @@
 from django.db import models
-
-
-from django.contrib.auth.models import AbstractUser
-
-class User(AbstractUser):
-    is_waitress = models.BooleanField(default=False)
+from django.contrib.auth.models import User
 
 class TableResto(models.Model):
     
