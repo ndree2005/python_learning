@@ -1,14 +1,27 @@
+from warnings import filters
+from rest_framework import permissions
+from .paginators import CustomPagination
+from rest_framework import status
+from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework.authtoken.models import Token
 from pos_app.models import ( TableResto, MenuResto, StatusModel)
 from api.serializers import (RegisterUserSerializers, TableRestoSerializers, LoginSerializers, MenuRestoSerializer)
-from rest_framework import generics
-from rest_framework.authtoken.models import Token
 from django.contrib.auth import login as django_login, logout as django_logout
 from django.http import HttpResponse, JsonResponse
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
+
+
+class MenuRestoFilterApi(generics.ListAPIView):
+    queryset = MenuResto.objects.all()
+    serializer_class = MenuRestoSerializer
+    pagination_class = CustomPagination
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['category__name',]
+    ordering_fields = ['created_on']
 
 class LoginView(APIView):
     serializer_class = LoginSerializers
