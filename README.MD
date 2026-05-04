@@ -1,4 +1,5 @@
 # Dokumentasi Praktik Authentication, Permission, Pagination, dan Filter
+# Pertemuan ke 7
 
 Project ini adalah API sederhana untuk sistem POS/restoran yang dibuat dengan Django dan Django REST Framework. Fokus dokumentasi ini adalah menjelaskan bagaimana project menerapkan:
 
