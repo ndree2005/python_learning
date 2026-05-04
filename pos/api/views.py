@@ -1,17 +1,21 @@
-from warnings import filters
-from rest_framework import permissions
-from .paginators import CustomPagination
-from rest_framework import status
-from rest_framework import generics
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from django.contrib.auth import login as django_login
+from django.http import JsonResponse
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, generics, permissions, status
 from rest_framework.authtoken.models import Token
-from pos_app.models import ( TableResto, MenuResto, StatusModel)
-from api.serializers import (RegisterUserSerializers, TableRestoSerializers, LoginSerializers, MenuRestoSerializer)
-from django.contrib.auth import login as django_login, logout as django_logout
-from django.http import HttpResponse, JsonResponse
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from api.serializers import (
+    LoginSerializers,
+    MenuRestoSerializer,
+    RegisterUserSerializers,
+    TableRestoSerializers,
+)
+from pos_app.models import MenuResto, StatusModel, TableResto
+
+from .paginators import CustomPagination
+from rest_framework.permissions import AllowAny
 
 
 class MenuRestoFilterApi(generics.ListAPIView):
@@ -20,10 +24,11 @@ class MenuRestoFilterApi(generics.ListAPIView):
     pagination_class = CustomPagination
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
-    filterset_fields = ['category__name',]
+    filterset_fields = ['category__name']
     ordering_fields = ['created_on']
 
 class LoginView(APIView):
+    permission_classes = [AllowAny]
     serializer_class = LoginSerializers
 
     def post(self, request):
@@ -46,7 +51,7 @@ class LoginView(APIView):
         })        
 
 class MenuRestoView(APIView):
-    authentication_class = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         menu_restos = MenuResto.objects.select_related('status').\
@@ -63,6 +68,7 @@ class MenuRestoView(APIView):
     
 
 class RegisterUserApiView(APIView):
+    permission_classes = [AllowAny]
     serializer_class = RegisterUserSerializers
 
     def post(self, request, format = None):
@@ -82,6 +88,7 @@ class RegisterUserApiView(APIView):
         }, status = status.HTTP_400_BAD_REQUEST)
     
 class TableRestoListApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         table_resto = TableResto.objects.all()
@@ -107,6 +114,7 @@ class TableRestoListApiView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class TableRestoDetailApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self, id):
         try:
